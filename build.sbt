@@ -5,14 +5,12 @@ scalaVersion := "2.12.6"
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-
 val zioVersion = "1.0.0-RC15"
 val zioKafkaVersion = "0.3.2"
 val pureConfigVersion = "0.12.1"
 
 val Specs2Version = "4.7.0"
 val PureScriptVersion = "0.12.1"
-
 
 val kafkaVersion = "0.10.1.1"
 
@@ -21,7 +19,8 @@ val pureConfigDependencies = Seq(
 )
 val zioDependencies = Seq(
   "dev.zio" %% "zio-streams" % zioVersion,
-  "dev.zio" %% "zio-kafka"   % zioKafkaVersion,
+  "dev.zio" %% "zio-kafka" % zioKafkaVersion,
+  "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC6"
 )
 
 libraryDependencies ++= Seq(
@@ -30,7 +29,9 @@ libraryDependencies ++= Seq(
 ) ++ pureConfigDependencies ++ zioDependencies
 
 enablePlugins(JavaAppPackaging)
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+addCompilerPlugin(
+  "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
+)
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("chk", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
