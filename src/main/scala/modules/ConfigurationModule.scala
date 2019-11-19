@@ -1,9 +1,10 @@
 package modules
 import zio._
 import pureconfig._
-import pureconfig.generic.auto
+import pureconfig.generic.auto._
+
+import zio.kafka.client._
 import ConfigurationModule._
-import zio.kafka.client.{ConsumerSettings, ProducerSettings}
 trait ConfigurationModule {
   val configurationModule: Service[Any]
 }

@@ -1,6 +1,5 @@
 package modules
 import zio.interop.catz._
-import org.apache.kafka.common.serialization.Serdes
 import zio.ZIO
 import zio.blocking.Blocking
 import zio.clock.Clock
@@ -8,25 +7,37 @@ import zio.console.{Console, putStrLn}
 import zio.kafka.client.{Consumer, Subscription}
 import zio.random.Random
 import zio.system.System
-import zio.duration._
+import zio.kafka.client.serde._
 
 class Server extends CatsApp {
-  implicit val serdeString = Serdes.String()
-
-  val logic: ZIO[Console with ConfigurationModule, Nothing, Int] = (for {
+  val logic: ZIO[Console with Blocking with Clock with ConfigurationModule,
+                 Nothing,
+                 Int] = (for {
     configuration <- ConfigurationModule.factory.configuration
-    fib <- Consumer
-      .consumeWith[Console, String, String](
-        Subscription.Topics(Set("test")),
-        configuration.kafka.consumer
-      ) { (key, value) =>
+    subscription = Subscription.topics("topic")
+    consumer = Consumer.make(configuration.kafka.consumer)
+    _ <- consumer.use { c =>
+      c.subscribeAnd(subscription)
+        .plainStream(Serde.string, Serde.string)
+        .flattenChunks
+        .tap(
+          cr => putStrLn(s"key: ${cr.record.key}, value: ${cr.record.value}")
+        )
+        .map(_.offset)
+        .aggregate(Consumer.offsetBatches)
+        .mapM(_.commit)
+        .runDrain
+    }
+    _ <- Consumer.consumeWith(
+      configuration.kafka.consumer,
+      subscription,
+      Serde.string,
+      Serde.string
+    ) {
+      case (key, value) =>
         putStrLn(s"Received message ${key}: ${value}")
       // Perform an effect with the received message
-      }
-      .fork
-    _ <- ZIO.sleep(20.seconds)
-    _ <- fib.interrupt
-    _ <- fib.join.ignore
+    }
   } yield 0).catchAll(err => putStrLn(err.toString).as(1))
 
   val program = logic.provideSome[zio.ZEnv] { env =>

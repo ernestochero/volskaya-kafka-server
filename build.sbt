@@ -4,7 +4,7 @@ scalaVersion := "2.12.6"
 
 resolvers += Resolver.sonatypeRepo("releases")
 resolvers += Resolver.sonatypeRepo("snapshots")
-
+scalacOptions ++= Seq("-Ypartial-unification")
 val zioVersion = "1.0.0-RC15"
 val zioKafkaVersion = "0.3.2"
 val pureConfigVersion = "0.12.1"
